@@ -1,0 +1,27 @@
+[package]
+name = "handshake"
+version = "0.1.0"
+edition = "2021"
+authors = ["Matt Cook <matt@mattcook.dev>"]
+description = "A p2p handshake"
+readme = "README.md"
+repository = "https://github.com/sciencefidelity/handshake"
+license = "MIT or Apache-2.0"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+enum_glob_use = "deny"
+pedantic = { level = "deny", priority = 1 }
+nursery = { level = "deny", priority = 2 }
+unwrap_used = "deny"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+
+[dependencies]
