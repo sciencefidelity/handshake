@@ -2,7 +2,7 @@
 
 ## A P2P node handshake
 
-This is a P2P node handshake based on to node implementaion [pea2pea](https://github.com/ljedrz/pea2pea/tree/master). It uses a key exchange strategy based the [Noise Protocol Framework](http://www.noiseprotocol.org) using [snow](https://github.com/mcginty/snow/tree/main) to make the handshake using a simple version of the [XX pattern](http://www.noiseprotocol.org/noise.html#handshake-pattern-basics) where the initiator and the responder both hold a static key pair, . The exchange comprises three message patterns:
+This is a P2P node handshake based on the node implementation [pea2pea](https://github.com/ljedrz/pea2pea/tree/master). It uses a key exchange strategy based on the [Noise Protocol Framework](http://www.noiseprotocol.org) using [snow](https://github.com/mcginty/snow/tree/main) to make the handshake using a simple version of the [XX pattern](http://www.noiseprotocol.org/noise.html#handshake-pattern-basics) where the initiator and the responder both hold a static key pair. The exchange comprises three message patterns:
 
 ```
 XX:
