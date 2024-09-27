@@ -3,13 +3,10 @@ name = "handshake"
 version = "0.1.0"
 edition = "2021"
 authors = ["Matt Cook <matt@mattcook.dev>"]
-description = "A p2p handshake"
+description = "P2P noise XX handshake"
 readme = "README.md"
 repository = "https://github.com/sciencefidelity/handshake"
 license = "MIT or Apache-2.0"
-
-[lints.rust]
-unsafe_code = "forbid"
 
 [lints.clippy]
 enum_glob_use = "deny"
@@ -24,7 +21,6 @@ panic = "abort"
 strip = "symbols"
 
 [dependencies]
-parking_lot = "0.12"
 pea2pea = "0.50"
 snow = "0.9"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

@@ -301,7 +301,6 @@ checksum = "32085ea23f3234fc7846555e85283ba4de91e21016dc0455a16286d87a292d64"
 name = "handshake"
 version = "0.1.0"
 dependencies = [
- "parking_lot",
  "pea2pea",
  "snow",
  "tokio",

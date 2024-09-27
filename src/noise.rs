@@ -6,6 +6,13 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tracing::info;
 
 use crate::node;
+use Error::{Io, Snow};
+
+#[derive(Debug)]
+pub enum Error {
+    Io(io::Error),
+    Snow(snow::Error),
+}
 
 /// A Noise Protocol Framework handshake using the XX pattern.
 ///
@@ -23,7 +30,7 @@ pub async fn handshake_xx(
     node: &node::Hello,
     conn: &mut Connection,
     buffer: &mut [u8],
-) -> io::Result<()> {
+) -> Result<(), Error> {
     // Get current connection side.
     let node_conn_side = !conn.side();
     // Borrow full TCP stream.
@@ -34,45 +41,45 @@ pub async fn handshake_xx(
 
     match node_conn_side {
         ConnectionSide::Initiator => {
-            let mut noise = local_private_key.build_initiator().unwrap();
+            let mut noise = local_private_key.build_initiator().map_err(Snow)?;
 
             // -> e
-            let len = noise.write_message(&[], buffer).unwrap();
-            stream.write_all(&buffer[..len]).await?;
+            let len = noise.write_message(&[], buffer).map_err(Snow)?;
+            stream.write_all(&buffer[..len]).await.map_err(Io)?;
             info!("{:?} sent e: (handshake pt 1/3)", node.node().name());
 
             // <- e, ee, s, es
-            let len = stream.read(buffer).await?;
-            noise.read_message(&buffer[..len], &mut []).unwrap();
+            let len = stream.read(buffer).await.map_err(Io)?;
+            noise.read_message(&buffer[..len], &mut []).map_err(Snow)?;
             info!(
                 "{:?} received e, ee, s, es: (handshake pt 2/3)",
                 node.node().name()
             );
 
             // -> s, se
-            let len = noise.write_message(&[], buffer).unwrap();
-            stream.write_all(&buffer[..len]).await?;
+            let len = noise.write_message(&[], buffer).map_err(Snow)?;
+            stream.write_all(&buffer[..len]).await.map_err(Io)?;
             info!("{:?} sent s, se: (handshake pt 3/3)", node.node().name());
         }
         ConnectionSide::Responder => {
-            let mut noise = local_private_key.build_responder().unwrap();
+            let mut noise = local_private_key.build_responder().map_err(Snow)?;
 
             // <- e
-            let len = stream.read(buffer).await?;
-            noise.read_message(&buffer[..len], &mut []).unwrap();
+            let len = stream.read(buffer).await.map_err(Io)?;
+            noise.read_message(&buffer[..len], &mut []).map_err(Snow)?;
             info!("{:?} sent e: (handshake pt 1/3)", node.node().name());
 
             // -> e, ee, s, es
-            let len = noise.write_message(&[], buffer).unwrap();
-            stream.write_all(&buffer[..len]).await?;
+            let len = noise.write_message(&[], buffer).map_err(Snow)?;
+            stream.write_all(&buffer[..len]).await.map_err(Io)?;
             info!(
                 "{:?} received e, ee, s, es: (handshake pt 3/3)",
                 node.node().name()
             );
 
             // <- s, se
-            let len = stream.read(buffer).await?;
-            noise.read_message(&buffer[..len], &mut []).unwrap();
+            let len = stream.read(buffer).await.map_err(Io)?;
+            noise.read_message(&buffer[..len], &mut []).map_err(Snow)?;
             info!("{:?} sent s, se: (handshake pt 3/3)", node.node().name());
         }
     }

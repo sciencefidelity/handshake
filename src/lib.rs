@@ -7,6 +7,7 @@ pub mod telemetry;
 mod tests {
     use std::{io, str::FromStr, time::Duration};
 
+    use noise::Error::{self, Io};
     use pea2pea::{connect_nodes, protocols::Handshake, Pea2Pea, Topology};
     use telemetry::init_subscriber;
     use tokio::time::sleep;
@@ -15,25 +16,26 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn node_handshake() -> io::Result<()> {
-        let level = std::env::var("LOG_LEVEL").unwrap_or("trace".to_owned());
-        if let Some(level) = Level::from_str(&level).ok() {
-            init_subscriber(level.into());
+    async fn node_handshake() -> Result<(), Error> {
+        if let Ok(maybe_level) = std::env::var("LOG_LEVEL") {
+            if let Ok(level) = Level::from_str(&maybe_level) {
+                init_subscriber(level.into());
+            }
         }
 
         // Create two test nodes.
-        let bob = node::Hello::new("initiator");
-        let alice = node::Hello::new("responder");
+        let bob = node::Hello::new("initiator")?;
+        let alice = node::Hello::new("responder")?;
 
         // Enable handshake for both test nodes.
         tokio::join!(bob.enable_handshake(), alice.enable_handshake());
 
         // Start Alice listening for incoming connections.
         // Store Alice's address to tell Bob.
-        let alice_addr = alice.node().toggle_listener().await?.unwrap();
+        let alice_addr = alice.node().toggle_listener().await.map_err(Io)?.unwrap();
 
         // Bob attempts to connect to Alice's address.
-        bob.node().connect(alice_addr).await?;
+        bob.node().connect(alice_addr).await.map_err(Io)?;
 
         // Waiting for a connection to establish.
         sleep(Duration::from_millis(100)).await;
@@ -62,10 +64,10 @@ mod tests {
         const NUM_NODES: usize = 7;
         const LAST_NODE: usize = NUM_NODES - 1;
         let nodes: [node::Hello; NUM_NODES] =
-            std::array::from_fn(|i| node::Hello::new(format!("line-{i}").as_str()));
+            std::array::from_fn(|i| node::Hello::new(format!("line-{i}").as_str()).unwrap());
         for node in &nodes {
             node.enable_handshake().await;
-            node.node().toggle_listener().await.unwrap();
+            node.node().toggle_listener().await?;
         }
         connect_nodes(&nodes, Topology::Line).await?;
 
@@ -78,6 +80,7 @@ mod tests {
             }
         }
 
+        disconnect_all_nodes(&nodes).await;
         Ok(())
     }
 
@@ -85,10 +88,10 @@ mod tests {
     async fn mesh_nodes_handshake() -> io::Result<()> {
         const NUM_NODES: usize = 7;
         let nodes: [node::Hello; NUM_NODES] =
-            std::array::from_fn(|i| node::Hello::new(format!("mesh-{i}").as_str()));
+            std::array::from_fn(|i| node::Hello::new(format!("mesh-{i}").as_str()).unwrap());
         for node in &nodes {
             node.enable_handshake().await;
-            node.node().toggle_listener().await.unwrap();
+            node.node().toggle_listener().await?;
         }
         connect_nodes(&nodes, Topology::Mesh).await?;
 
@@ -98,6 +101,7 @@ mod tests {
             assert_eq!(node.node().connected_addrs().len(), NUM_NODES - 1);
         }
 
+        disconnect_all_nodes(&nodes).await;
         Ok(())
     }
 
@@ -105,10 +109,10 @@ mod tests {
     async fn star_nodes_handshake() -> io::Result<()> {
         const NUM_NODES: usize = 7;
         let nodes: [node::Hello; NUM_NODES] =
-            std::array::from_fn(|i| node::Hello::new(format!("star-{i}").as_str()));
+            std::array::from_fn(|i| node::Hello::new(format!("star-{i}").as_str()).unwrap());
         for node in &nodes {
             node.enable_handshake().await;
-            node.node().toggle_listener().await.unwrap();
+            node.node().toggle_listener().await?;
         }
         connect_nodes(&nodes, Topology::Star).await?;
 
@@ -119,6 +123,15 @@ mod tests {
             assert_eq!(node.node().connected_addrs().len(), 1);
         }
 
+        disconnect_all_nodes(&nodes).await;
         Ok(())
+    }
+
+    async fn disconnect_all_nodes(nodes: &[node::Hello]) {
+        for node in nodes {
+            for addr in node.node().connected_addrs() {
+                node.node().disconnect(addr).await;
+            }
+        }
     }
 }
