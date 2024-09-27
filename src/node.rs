@@ -36,7 +36,6 @@ pub struct Hello {
 
 impl Hello {
     /// Creates a new [`HelloNode`] with the provided name.
-    #[must_use]
     pub fn new(name: &str) -> Result<Self, Error> {
         // Build the node's configuration.
         let config = Config {
