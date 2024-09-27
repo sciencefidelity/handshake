@@ -12,7 +12,7 @@ use crate::node;
 /// Both the initiator and responder possess static key pairs.
 /// and the handshake pattern comprises three message patterns.
 ///
-/// ```ignore
+/// ```plaintext
 /// XX:
 ///   -> e
 ///   <- e, ee, s, es

@@ -15,7 +15,6 @@ unsafe_code = "forbid"
 enum_glob_use = "deny"
 pedantic = { level = "deny", priority = 1 }
 nursery = { level = "deny", priority = 2 }
-unwrap_used = "deny"
 
 [profile.release]
 opt-level = "z"
@@ -28,6 +27,6 @@ strip = "symbols"
 parking_lot = "0.12"
 pea2pea = "0.50"
 snow = "0.9"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"

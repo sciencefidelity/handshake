@@ -34,6 +34,7 @@ pub struct Hello {
 
 impl Hello {
     /// Creates a new [`HelloNode`] with the provided name.
+    #[must_use]
     pub fn new(name: &str) -> Self {
         // Build the node's configuration.
         let config = Config {
@@ -54,10 +55,12 @@ impl Hello {
         }
     }
 
-    pub fn get_noise_params(&self) -> &NoiseParams {
+    #[must_use]
+    pub const fn get_noise_params(&self) -> &NoiseParams {
         &self.noise_params
     }
 
+    #[must_use]
     pub fn get_keypair(&self) -> &snow::Keypair {
         self.static_key.0.as_ref()
     }
