@@ -25,10 +25,6 @@ panic = "abort"
 strip = "symbols"
 
 [dependencies]
-anyhow = "1"
-async-std = "1"
-futures = "0.3"
-hashbrown = "0.14"
 parking_lot = "0.12"
 pea2pea = "0.50"
 snow = "0.9"

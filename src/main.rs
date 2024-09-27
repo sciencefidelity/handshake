@@ -10,8 +10,8 @@ use std::time::Duration;
 use pea2pea::{protocols::Handshake, Pea2Pea};
 use tokio::time::sleep;
 
-use handshake::{telemetry::init_subscriber, HelloNode};
-use tracing::{event, instrument, level_filters::LevelFilter, Level};
+use handshake::{node, telemetry::init_subscriber};
+use tracing::{info, level_filters::LevelFilter};
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
@@ -20,18 +20,15 @@ async fn main() -> io::Result<()> {
     Ok(())
 }
 
-#[instrument]
 async fn run() {
-    event!(Level::INFO, "Starting up");
+    info!("starting up");
 
     // Create two test nodes.
-    let initiator = HelloNode::new("initiator");
-    let responder = HelloNode::new("responder");
+    let initiator = node::Hello::new("initiator");
+    let responder = node::Hello::new("responder");
 
     // Enable handshake for both test nodes.
-    for node in [&initiator, &responder] {
-        node.enable_handshake().await;
-    }
+    tokio::join!(initiator.enable_handshake(), responder.enable_handshake(),);
 
     // Start responder listening for incoming connections. Store responder address.
     let responder_addr = responder.node().toggle_listener().await.unwrap().unwrap();
@@ -42,6 +39,11 @@ async fn run() {
     // Wait for connection to establish.
     sleep(Duration::from_millis(100)).await;
 
-    let responder_connections = responder.node().connected_addrs();
-    event!(Level::INFO, "{responder_connections:?}");
+    let initiator_attr = responder.node().connected_addrs()[0];
+
+    // Disconnect everyone from the stream.
+    tokio::join!(
+        initiator.node().disconnect(responder_addr),
+        responder.node().disconnect(initiator_attr),
+    );
 }
