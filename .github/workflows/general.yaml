@@ -55,4 +55,23 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Linting
+
         run: cargo clippy -- -D warnings
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: Install the Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache Action
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run build
+        run: cargo build --release
+
+      - name: Execute bin
+        run: ./target/release/handshake
